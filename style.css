@@ -1,0 +1,77 @@
+body { text-align: center; }
+
+.main {  }
+
+.front, .rear, .len-list {
+  display: inline-block;
+  position: relative;
+}
+
+.front, .rear {
+  text-align: left;
+  margin: 10px;
+  vertical-align: top;
+}
+.len-list {
+  padding: 25px 10px 5px;
+  background: #eee;
+  min-width: 100px;
+  border-radius: 2px;
+  min-height: 40px;
+}
+
+.len-list-name, .len-list-length {
+  position: absolute;
+  font-size: 11px;
+  top: 5px;
+  z-index: 10;
+}
+.len-list-name { left: 10px; }
+
+.len-list-length { right: 10px; color: #888; }
+
+/* http://www.cssarrowplease.com/ */
+.list-cell {
+  display: inline-block;
+  position: relative;
+  background: #fff;
+  border: 1px solid #c2e1f5;
+  padding: 4px;
+  margin-right: 6px; margin-bottom: 5px;
+}
+
+.list-cell:after, .list-cell:before {
+  left: 100%;
+  top: 50%;
+  border: solid transparent;
+  content: " ";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+.list-cell:after {
+  border-color: rgba(136, 183, 213, 0);
+  border-left-color: #fff;
+  border-width: 6px;
+  margin-top: -6px;
+}
+.list-cell:before {
+  border-color: rgba(194, 225, 245, 0);
+  border-left-color: #c2e1f5;
+  border-width: 7px;
+  margin-top: -7px;
+}
+
+.item {
+  text-align: center;
+  display: inline-block;
+  background: #0074D9;
+  color: #fff;
+  min-width: 24px;
+  font-size: 12px;
+  line-height: 24px;
+  height: 24px;
+  border-radius: 12px;
+}
