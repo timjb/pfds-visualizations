@@ -1,8 +1,10 @@
 module Main where
 
-import Lib
+import BankersQueueVis
+import RealTimeQueueVis
 import React.Flux
---import qualified BankersQueue as BQ
 
 main :: IO ()
-main = reactRender "app" bQueueVis ()
+main = do
+  reactRender "bqueue-vis" bQueueVis ()
+  reactRender "rtqueue-vis" rtQueueVis ()

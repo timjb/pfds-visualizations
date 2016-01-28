@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies, DeriveGeneric, DeriveAnyClass #-}
 
-module Lib where
+module BankersQueueVis where
 
 --import GHCJS.Types
 import React.Flux

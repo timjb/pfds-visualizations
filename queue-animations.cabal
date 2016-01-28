@@ -16,8 +16,10 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   ghc-options:         -Wall
-  exposed-modules:     Lib,
-                       BankersQueue
+  exposed-modules:     BankersQueueVis,
+                       BankersQueue,
+                       RealTimeQueueVis,
+                       RealTimeQueue
   build-depends:       base >= 4.7 && < 5
                      , ghcjs-base
                      , react-flux
