@@ -7,11 +7,11 @@ import System.IO.Unsafe (unsafePerformIO)
 import Control.Monad ((>=>))
 
 data LazyListThunk a =
-  AppendReverseThunk (LazyListRef a) (LazyList a) [a]
+  AppendReverseThunk !(LazyListRef a) !(LazyList a) ![a]
 
 data LazyList a
   = Nil
-  | Cons a (LazyListRef a)
+  | Cons !a !(LazyListRef a)
 
 type LazyListRef a = IORef (Either (LazyListThunk a) (LazyList a))
 
@@ -50,9 +50,6 @@ evalStep ref =
     Nil -> Nothing
     Cons _ ref' -> Just ref'
 
-twoEvalStep :: LazyListRef a -> Maybe (LazyListRef a)
-twoEvalStep = evalStep >=> evalStep
-
 forceLazyList :: LazyListRef a -> [a]
 forceLazyList xs =
   case forceWHNF xs of
@@ -61,35 +58,46 @@ forceLazyList xs =
 
 data RTQueue a =
   RTQueue
-  { frontList :: LazyListRef a
-  , frontLen :: Int
-  , rearList :: [a]
-  , rearLen :: Int
+  { frontList :: !(LazyListRef a)
+  , frontLen :: !Int
+  , rearList :: ![a]
+  , rearLen :: !Int
+  , schedule :: !(LazyListRef a)
   }
 
 empty :: RTQueue a
-empty = RTQueue (toRef Nil) 0 [] 0
+empty = let front = toRef Nil in RTQueue front 0 [] 0 front
 
 null :: RTQueue a -> Bool
-null (RTQueue _ k _ _) = k == 0
+null (RTQueue _ k _ _ _) = k == 0
 
 toList :: RTQueue a -> [a]
-toList (RTQueue front _ rear _) = forceLazyList front ++ reverse rear
+toList (RTQueue front _ rear _ _) = forceLazyList front ++ reverse rear
 
-mkRTQueue :: LazyListRef a -> Int -> [a] -> Int -> RTQueue a
-mkRTQueue front frontL rear rearL
-  | frontL > rearL = RTQueue front frontL rear rearL
+schedStep :: RTQueue a -> RTQueue a
+schedStep rtq@(RTQueue front frontL rear rearL sched) =
+  case forceWHNF sched of
+    Nil -> rtq
+    Cons _ sched' -> RTQueue front frontL rear rearL sched'
+
+-- without scheduled step!
+mkRTQueue :: LazyListRef a -> Int -> [a] -> Int -> LazyListRef a -> RTQueue a
+mkRTQueue front frontL rear rearL sched
+  | frontL > rearL = RTQueue front frontL rear rearL sched
   | otherwise =
-    RTQueue (createIORef (Left (AppendReverseThunk front Nil rear))) (frontL + rearL) [] 0
+    let newFront = createIORef (Left (AppendReverseThunk front Nil rear))
+    in RTQueue newFront (frontL + rearL) [] 0 newFront
 
 fromList :: [a] -> RTQueue a
-fromList xs = RTQueue (lazyListFromList xs) (length xs) [] 0
+fromList xs =
+  let front = lazyListFromList xs
+  in RTQueue front (length xs) [] 0 front
 
 uncons :: RTQueue a -> Maybe (a, RTQueue a)
-uncons (RTQueue front frontL rear rearL) =
+uncons (RTQueue front frontL rear rearL sched) =
   case forceWHNF front of
     Nil -> Nothing
-    Cons x front' -> Just (x, mkRTQueue front' (frontL-1) rear rearL)
+    Cons x front' -> Just (x, mkRTQueue front' (frontL-1) rear rearL sched)
 
 head :: RTQueue a -> Maybe a
 head q = fst <$> uncons q
@@ -98,6 +106,6 @@ tail :: RTQueue a -> Maybe (RTQueue a)
 tail q = snd <$> uncons q
 
 snoc :: RTQueue a -> a -> RTQueue a
-snoc (RTQueue front frontL rear rearL) x
-  | frontL == 0 = RTQueue (lazyListFromList [x]) 1 [] 0
-  | otherwise   = mkRTQueue front frontL (x:rear) (rearL+1)
+snoc (RTQueue front frontL rear rearL sched) x
+  | frontL == 0 = let front = lazyListFromList [x] in RTQueue front 1 [] 0 front
+  | otherwise   = mkRTQueue front frontL (x:rear) (rearL+1) sched

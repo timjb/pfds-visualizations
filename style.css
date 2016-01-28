@@ -1,5 +1,7 @@
 body { text-align: center; }
 
+section { margin: 500px 0; }
+
 .main {  }
 
 .front, .rear, .len-list {
@@ -32,20 +34,16 @@ body { text-align: center; }
 
 .list {
   display: inline-block;
-  vertical-align: center;
 }
 
-.list.empty {
-  height: 40px; line-height: 40px;
-  position: relative;
-  margin: 0 10px;
-  vertical-align: bottom;
-}
+.list.empty {}
 
 .list.empty:before, .list.empty:after {
   display: inline-block;
   border: 1px solid #333;
-  position: absolute; top: 2px; bottom: 2px;
+  height: 32px; line-height: 32px;
+  vertical-align: middle;
+  margin: 0 2px;
 
   content: " ";
   width: 5px;

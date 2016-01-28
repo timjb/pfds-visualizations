@@ -19,7 +19,9 @@ library
   exposed-modules:     BankersQueueVis,
                        BankersQueue,
                        RealTimeQueueVis,
-                       RealTimeQueue
+                       RealTimeQueue,
+                       AmoQueue,
+                       AmoQueueVis
   build-depends:       base >= 4.7 && < 5
                      , ghcjs-base
                      , react-flux
