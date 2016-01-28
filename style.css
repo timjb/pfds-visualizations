@@ -30,6 +30,30 @@ body { text-align: center; }
 
 .len-list-length { right: 10px; color: #888; }
 
+.list {
+  display: inline-block;
+  vertical-align: center;
+}
+
+.list.empty {
+  height: 40px; line-height: 40px;
+  position: relative;
+  margin: 0 10px;
+  vertical-align: bottom;
+}
+
+.list.empty:before, .list.empty:after {
+  display: inline-block;
+  border: 1px solid #333;
+  position: absolute; top: 2px; bottom: 2px;
+
+  content: " ";
+  width: 5px;
+}
+
+.list.empty:before { left: -8px; border-right: none; }
+.list.empty:after { right: -10px; border-left: none; }
+
 /* http://www.cssarrowplease.com/ */
 .list-cell {
   display: inline-block;
@@ -37,7 +61,8 @@ body { text-align: center; }
   background: #fff;
   border: 1px solid #c2e1f5;
   padding: 4px;
-  margin-right: 6px; margin-bottom: 5px;
+  margin: 3px;
+  /*vertical-align: top;*/
 }
 
 .list-cell:after, .list-cell:before {
@@ -64,6 +89,7 @@ body { text-align: center; }
   margin-top: -7px;
 }
 
+
 .item {
   text-align: center;
   display: inline-block;
@@ -78,6 +104,13 @@ body { text-align: center; }
 
 .thunk {
   display: inline-block;
-  margin: 10px;
+  padding: 10px;
   background: rgba(100, 100, 100, 0.15)
+}
+
+.list code {
+  display: inline-block;
+  vertical-align: 10%;
+  margin: 0 10px;
+  vertical-align: baseline;
 }

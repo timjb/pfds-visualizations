@@ -2,16 +2,17 @@
 
 module BankersQueueVis where
 
---import GHCJS.Types
-import React.Flux
 import qualified BankersQueue as BQ
 import qualified LenList as LL
+import ReactCommon
+
+--import GHCJS.Types
+import React.Flux
 import Data.Maybe (fromMaybe)
 import Control.DeepSeq (NFData)
 import GHC.Generics (Generic)
 import Data.Typeable (Typeable)
 import Data.Monoid ((<>))
-import Control.Monad (forM_)
 
 data BQueueVisState =
   BQueueVisState
@@ -45,11 +46,7 @@ dispatchBQueueAction a = [SomeStoreAction queueStore a]
 
 renderLenList :: LL.LenList Int -> ReactElementM handler ()
 renderLenList (LL.LenList len items) =
-  div_ [ "className" $= "len-list" ] $ do
-    span_ [ "className" $= "len-list-length" ] $ "(length: " <> elemShow len <> ")"
-    forM_ items $ \item ->
-      span_ [ "className" $= "list-cell" ] $
-        span_ [ "className" $= "item" ] (elemShow item)
+  renderListWithLen items len
 
 -- Visualization of a banker's queue
 bQueueVis :: ReactView ()

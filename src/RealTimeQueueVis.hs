@@ -1,20 +1,18 @@
-
 {-# LANGUAGE OverloadedStrings, TypeFamilies, DeriveGeneric, DeriveAnyClass #-}
 
 module RealTimeQueueVis where
 
---import GHCJS.Types
 import React.Flux
-import qualified RealTimeQueue as RTQ
-import qualified LenList as LL
 import Data.Maybe (fromMaybe)
 import Control.DeepSeq (NFData)
 import GHC.Generics (Generic)
 import Data.Typeable (Typeable)
 import Data.Monoid ((<>))
-import Control.Monad (forM_)
 import Data.IORef (readIORef)
 import System.IO.Unsafe (unsafePerformIO)
+
+import ReactCommon
+import qualified RealTimeQueue as RTQ
 
 data RTQueueVisState =
   RTQueueVisState
@@ -46,33 +44,25 @@ queueStore = mkStore $ RTQueueVisState 2 (RTQ.fromList [1]) []
 dispatchBQueueAction :: RTQueueAction -> [SomeStoreAction]
 dispatchBQueueAction a = [SomeStoreAction queueStore a]
 
--- TODO: copied from BankersQueue visualization, make code more DRY
-renderLenList :: LL.LenList Int -> ReactElementM handler ()
-renderLenList (LL.LenList len items) =
-  div_ [ "className" $= "len-list" ] $ do
-    span_ [ "className" $= "len-list-length" ] $ "(length: " <> elemShow len <> ")"
-    forM_ items $ \item ->
-      span_ [ "className" $= "list-cell" ] $
-        span_ [ "className" $= "item" ] (elemShow item)
-
 renderLazyList :: RTQ.LazyListRef Int -> ReactElementM handler ()
-renderLazyList ref =
-  case unsafeRead ref of
-    Left (RTQ.AppendReverseThunk xs rs ys) ->
-      div_ [ "className" $= "thunk" ] $ do
-        div_ $ renderLazyList xs
-        "++ reverse"
-        div_ $ forM_ ys $ \item ->
-          span_ [ "className" $= "list-cell" ] $
-            span_ [ "className" $= "item" ] (elemShow item)
-        "++"
-        div_ $ renderLazyList (RTQ.toRef rs)
-    Right RTQ.Nil -> mempty
-    Right (RTQ.Cons x xs) -> do
-      span_ [ "className" $= "list-cell" ] $
-        span_ [ "className" $= "item" ] (elemShow x)
-      renderLazyList xs
-  where unsafeRead = unsafePerformIO . readIORef
+renderLazyList = go True
+  where
+    unsafeRead = unsafePerformIO . readIORef
+    go isToplevel ref =
+      case unsafeRead ref of
+        Left (RTQ.AppendReverseThunk xs rs ys) ->
+          cldiv_ "list thunk" $ do
+            cldiv_ "list" $ go True xs
+            code_ " ++ reverse "
+            renderList ys
+            code_ " ++ "
+            go True (RTQ.toRef rs)
+        Right RTQ.Nil ->
+          if isToplevel then cldiv_ "list empty" mempty else mempty
+        Right (RTQ.Cons x xs) ->
+          (if isToplevel then cldiv_ "list" else id) $ do
+            clspan_ "list-cell" $ clspan_ "item" (elemShow x)
+            go False xs
 
 -- Visualization of a banker's queue
 rtQueueVis :: ReactView ()
@@ -93,4 +83,4 @@ rtQueueVis =
           renderLazyList front
       div_ [ "className" $= "rear" ] $ do
         span_ [ "className" $= "len-list-name" ] "rear"
-        renderLenList (LL.LenList rearL rear)
+        renderListWithLen rear rearL
