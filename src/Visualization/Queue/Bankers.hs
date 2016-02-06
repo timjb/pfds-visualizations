@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies, DeriveGeneric, DeriveAnyClass #-}
 
-module BankersQueueVis where
+module Visualization.Queue.Bankers where
 
-import qualified BankersQueue as BQ
-import qualified LenList as LL
-import ReactCommon
+import qualified VisualizationData.Queue.Bankers as BQ
+import qualified VisualizationData.LenList as LL
+import Visualization.Common
 
 --import GHCJS.Types
 import React.Flux

@@ -16,12 +16,12 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   ghc-options:         -Wall
-  exposed-modules:     BankersQueueVis,
-                       BankersQueue,
-                       RealTimeQueueVis,
-                       RealTimeQueue,
-                       AmoQueue,
-                       AmoQueueVis
+  exposed-modules:     VisualizationData.Queue.Bankers,
+                       VisualizationData.Queue.Amortized,
+                       VisualizationData.Queue.RealTime,
+                       Visualization.Queue.Bankers,
+                       Visualization.Queue.Amortized,
+                       Visualization.Queue.RealTime
   build-depends:       base >= 4.7 && < 5
                      , ghcjs-base
                      , react-flux

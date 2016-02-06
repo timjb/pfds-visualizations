@@ -1,7 +1,7 @@
-module BankersQueue where
+module VisualizationData.Queue.Bankers where
 
 import qualified Data.List as L
-import qualified LenList as LL
+import qualified VisualizationData.LenList as LL
 
 data BQueue a =
   BQueue { heads :: LL.LenList a

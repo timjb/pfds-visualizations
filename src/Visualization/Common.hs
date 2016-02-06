@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ReactCommon where
+module Visualization.Common where
 
 import React.Flux
 import Control.Monad (forM_)

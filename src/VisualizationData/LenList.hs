@@ -1,4 +1,4 @@
-module LenList where
+module VisualizationData.LenList where
 
 import Prelude hiding (reverse)
 import qualified Data.List as L

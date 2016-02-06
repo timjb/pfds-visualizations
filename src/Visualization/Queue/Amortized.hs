@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies, DeriveGeneric, DeriveAnyClass #-}
 
-module AmoQueueVis where
+module Visualization.Queue.Amortized where
 
 import React.Flux
 import Data.Maybe (fromMaybe)
@@ -12,8 +12,8 @@ import Data.IORef (readIORef)
 import System.IO.Unsafe (unsafePerformIO)
 import Control.Monad (forM_)
 
-import ReactCommon
-import qualified AmoQueue as AQ
+import Visualization.Common
+import qualified VisualizationData.Queue.Amortized as AQ
 
 data AQueueVisState =
   AQueueVisState

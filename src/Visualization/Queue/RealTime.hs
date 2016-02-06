@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies, DeriveGeneric, DeriveAnyClass #-}
 
-module RealTimeQueueVis where
+module Visualization.Queue.RealTime where
 
 import React.Flux
 import Data.Maybe (fromMaybe)
@@ -13,8 +13,8 @@ import System.IO.Unsafe (unsafePerformIO)
 import Control.Monad (forM_, void)
 import Control.Concurrent (threadDelay, forkIO)
 
-import ReactCommon
-import qualified RealTimeQueue as RTQ
+import Visualization.Common
+import qualified VisualizationData.Queue.RealTime as RTQ
 
 data RTQueueVisState =
   RTQueueVisState

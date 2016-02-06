@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module AmoQueue where
+module VisualizationData.Queue.Amortized where
 
 import Data.IORef
 import System.IO.Unsafe (unsafePerformIO)

@@ -1,9 +1,10 @@
 module Main where
 
-import BankersQueueVis
-import RealTimeQueueVis
-import AmoQueueVis
 import React.Flux
+
+import Visualization.Queue.Bankers
+import Visualization.Queue.Amortized
+import Visualization.Queue.RealTime
 
 main :: IO ()
 main = do

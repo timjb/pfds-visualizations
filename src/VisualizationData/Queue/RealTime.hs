@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module RealTimeQueue where
+module VisualizationData.Queue.RealTime where
 
 import Data.IORef
 import System.IO.Unsafe (unsafePerformIO)
