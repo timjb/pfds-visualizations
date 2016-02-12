@@ -10,29 +10,48 @@
 </head>
 
 <body>
-  <div class="main">
-    <section>
-      <h1>
-        Banker's Queue
-      </h1>
-      <div id="bqueue-vis"></div>
-    </section>
-    <section>
-      <h1>
-        Amortized Queue
-      </h1>
-      <div id="aqueue-vis"></div>
-    </section>
-    <section>
-      <h1>
-        Real-Time-Queue
-      </h1>
-      <div id="rtqueue-vis"></div>
-    </section>
-  </div>
-  <script src="deps/react.js"></script>
-  <script src="deps/react-dom.js"></script>
-  <script src="js-build/queue-animations.js"></script>
+
+<div class="main">
+  <section>
+    <h1>
+      Banker's Queue
+    </h1>
+    <div id="bqueue-vis"></div>
+  </section>
+  <section>
+    <h1>
+      Amortized Queue
+    </h1>
+    <div id="aqueue-vis"></div>
+  </section>
+  <section>
+    <h1>
+      Real-Time-Queue
+    </h1>
+    <div id="rtqueue-vis"></div>
+  </section>
+</div>
+  
+<script>
+
+/* https://goo.gl/km1j9V */
+var loadJsFileSet=function(){function h(c,d){var b=document.createElement("script");b.src=c;b.async=!0;b.onload=d;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(b,a)}var c={};return function(e,d){var b=!0;Object.keys(e).forEach(function(a){if(2!==c[a]&&(b=!1,1!==c[a])){for(var g=e[a],f=0;f<g.length;f++)if(2!==c[g[f]])return;c[a]=1;h(a,function(){c[a]=2;console.log("loaded `"+a+"`");loadJsFileSet(e,d)})}});b&&d()}}();
+
+var productionFileSet = {
+  'js-build/app.min.js': []
+};
+
+var developmentFileSet = {
+  'deps/react.js': [],
+  'deps/react-dom.js': ['deps/react.js'],
+  'js-build/queue-animations.js': ['deps/react.js', 'deps/react-dom.js']
+}
+
+var environment = (location.host === 'localhost:8000') ? 'development' : 'production';
+loadJsFileSet(environment === 'development' ? developmentFileSet : productionFileSet, function () {});
+
+</script>
+
 </body>
 
 </html>

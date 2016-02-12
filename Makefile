@@ -2,7 +2,7 @@
 INSTALL_ROOT:=$(shell stack path --local-install-root)
 CLOSURE:=java -jar ~/Software/closure/compiler.jar
 
-all: js-build/install-root js-build/queue-animations.min.js
+all: js-build/install-root js-build/app.min.js
 
 js-build/install-root: $(INSTALL_ROOT)
 	mkdir -p js-build
@@ -10,6 +10,9 @@ js-build/install-root: $(INSTALL_ROOT)
 
 js-build/queue-animations.min.js: js-build/queue-animations.js
 	$(CLOSURE) --compilation_level=ADVANCED_OPTIMIZATIONS js-build/queue-animations.js > js-build/queue-animations.min.js
+
+js-build/app.min.js: js-build/queue-animations.min.js
+	cat deps/react.min.js deps/react-dom.min.js js-build/queue-animations.min.js > js-build/app.min.js
 
 js-build/queue-animations.js: $(INSTALL_ROOT)/bin/queue-animations-output.jsexe/all.js
 	mkdir -p js-build
