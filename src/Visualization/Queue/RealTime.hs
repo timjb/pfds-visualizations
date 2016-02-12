@@ -1,6 +1,10 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, DeriveGeneric, DeriveAnyClass #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies, DeriveGeneric, DeriveAnyClass, PatternSynonyms #-}
 
-module Visualization.Queue.RealTime where
+module Visualization.Queue.RealTime (rtQueueVis) where
+
+import Visualization.Common
+import qualified VisualizationData.Queue.RealTime as RTQ
+import qualified Visualization.Queue.Generic as VQG
 
 import React.Flux
 import Data.Maybe (fromMaybe)
@@ -13,24 +17,16 @@ import System.IO.Unsafe (unsafePerformIO)
 import Control.Monad (forM_, void)
 import Control.Concurrent (threadDelay, forkIO)
 
-import Visualization.Common
-import qualified VisualizationData.Queue.RealTime as RTQ
+newtype RTQueueVisState = RTQueueVisState (VQG.QueueVisState RTQ.RTQueue)
+  deriving (Typeable)
 
-data RTQueueVisState =
-  RTQueueVisState
-  { nextInt :: Int
-  , queue :: RTQ.RTQueue Int
-  , pastStates :: [RTQ.RTQueue Int]
-  } deriving (Typeable)
+pattern RTQVS nextInt queue hist = RTQueueVisState (VQG.QueueVisState nextInt queue hist)
 
 initialState :: RTQueueVisState
-initialState = RTQueueVisState 2 (RTQ.fromList [1]) []
+initialState = RTQueueVisState VQG.initialState
 
 data RTQueueAction
-  = Tail
-  | Snoc
-  | Back
-  | Clear
+  = SimpleQueueAction VQG.QueueAction
   | ScheduleStep
   deriving (Show, Eq, Typeable, Generic, NFData)
 
@@ -42,25 +38,31 @@ forceStepFuture =
 
 instance StoreData RTQueueVisState where
   type StoreAction RTQueueVisState = RTQueueAction
-  transform Tail (RTQueueVisState k q hist) = do
+  transform (SimpleQueueAction VQG.Tail) (RTQVS k q hist) = do
     forceStepFuture
-    pure $ RTQueueVisState k (fromMaybe q (RTQ.tail q)) (q:hist)
-  transform Snoc (RTQueueVisState k q hist) = do
+    pure $ RTQVS k (fromMaybe q (RTQ.tail q)) (q:hist)
+  transform (SimpleQueueAction VQG.Snoc) (RTQVS k q hist) = do
     forceStepFuture
-    pure $ RTQueueVisState (k+1) (RTQ.snoc q k) (q:hist)
-  transform Back (RTQueueVisState k q hist) =
-    return $ case hist of
-      [] -> RTQueueVisState k q []
-      (r:hist') -> RTQueueVisState k r hist'
-  transform Clear _ = return initialState
-  transform ScheduleStep (RTQueueVisState k q hist) =
-    return $ RTQueueVisState k (RTQ.schedStep q) hist
+    pure $ RTQVS (k+1) (RTQ.snoc q k) (q:hist)
+  transform (SimpleQueueAction action) (RTQueueVisState state) =
+    RTQueueVisState <$> transform action state
+  transform ScheduleStep (RTQVS k q hist) =
+    return $ RTQVS k (RTQ.schedStep q) hist
 
 queueStore :: ReactStore RTQueueVisState
 queueStore = mkStore initialState
 
-dispatchBQueueAction :: RTQueueAction -> [SomeStoreAction]
-dispatchBQueueAction a = [SomeStoreAction queueStore a]
+dispatch :: RTQueueAction -> [SomeStoreAction]
+dispatch a = [SomeStoreAction queueStore a]
+
+rtQueueVis :: ReactView ()
+rtQueueVis =
+  defineControllerView "rtqueue-visualization" queueStore $
+    \(RTQueueVisState queueState@(VQG.QueueVisState _ rtq hist)) _ ->
+      div_ $ do
+        VQG.renderControls queueState (dispatch . SimpleQueueAction)
+        div_ $ renderRTQueue rtq
+        forM_ hist $ div_ . renderRTQueue
 
 renderLazyList :: Show a => RTQ.LazyListRef a -> ReactElementM handler ()
 renderLazyList = go True
@@ -82,30 +84,13 @@ renderLazyList = go True
             clspan_ "list-cell" $ clspan_ "item" (elemShow x)
             go False xs
 
--- Visualization of a Real-Time-queue
-rtQueueVis :: ReactView ()
-rtQueueVis =
-  defineControllerView "rtqueue-visualization" queueStore $ \(RTQueueVisState k rtq hist) _ ->
-    div_ $ do
-      p_ [ "className" $= "controls" ] $ do
-        button_ [ "className" $= "pure-button back-button", "disabled" @= null hist, onClick (\_ _ -> dispatchBQueueAction Back) ] "back"
-        " "
-        button_ [ "className" $= "pure-button clear-button", onClick (\_ _ -> dispatchBQueueAction Clear) ] "clear"
-        " "
-        button_ [ "className" $= "pure-button tail-button", "disabled" @= RTQ.null rtq, onClick (\_ _ -> dispatchBQueueAction Tail) ] "tail(queue)"
-        " "
-        button_ [ "className" $= "pure-button snoc-button", onClick (\_ _ -> dispatchBQueueAction Snoc) ] $
-          "snoc(queue, " <> elemShow k <> ")"
-      div_ $ renderRTQueue rtq
-      forM_ hist $ div_ . renderRTQueue
-  where
-    renderRTQueue :: Show a => RTQ.RTQueue a -> ReactElementM handler ()
-    renderRTQueue (RTQ.RTQueue front frontL rear rearL _) = do
-      div_ [ "className" $= "front" ] $ do
-        span_ [ "className" $= "len-list-name" ] "front"
-        div_ [ "className" $= "len-list" ] $ do
-          span_ [ "className" $= "len-list-length" ] $ "(length: " <> elemShow frontL <> ")"
-          renderLazyList front
-      div_ [ "className" $= "rear" ] $ do
-        span_ [ "className" $= "len-list-name" ] "rear"
-        renderListWithLen rear rearL
+renderRTQueue :: Show a => RTQ.RTQueue a -> ReactElementM handler ()
+renderRTQueue (RTQ.RTQueue front frontL rear rearL _) = do
+  div_ [ "className" $= "front" ] $ do
+    span_ [ "className" $= "len-list-name" ] "front"
+    div_ [ "className" $= "len-list" ] $ do
+      span_ [ "className" $= "len-list-length" ] $ "(length: " <> elemShow frontL <> ")"
+      renderLazyList front
+  div_ [ "className" $= "rear" ] $ do
+    span_ [ "className" $= "len-list-name" ] "rear"
+    renderListWithLen rear rearL

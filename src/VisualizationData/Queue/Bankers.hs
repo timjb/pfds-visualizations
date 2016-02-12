@@ -2,6 +2,7 @@ module VisualizationData.Queue.Bankers where
 
 import qualified Data.List as L
 import qualified VisualizationData.LenList as LL
+import VisualizationData.Queue.Interface
 
 data BQueue a =
   BQueue { heads :: LL.LenList a
@@ -13,6 +14,11 @@ instance Show a => Show (BQueue a) where
 
 instance Eq a => Eq (BQueue a) where
   q == r = toList q == toList r
+
+instance Queue BQueue where
+  qempty = empty
+  qsnoc = snoc
+  quncons = uncons
 
 toList :: BQueue a -> [a]
 toList (BQueue xs ys) = LL.items xs ++ L.reverse (LL.items ys)

@@ -2,6 +2,8 @@
 
 module VisualizationData.Queue.Amortized where
 
+import VisualizationData.Queue.Interface
+
 import Data.IORef
 import System.IO.Unsafe (unsafePerformIO)
 import Control.Monad ((>=>))
@@ -66,6 +68,11 @@ data AQueue a =
   , rearList :: [a]
   , rearLen :: Int
   }
+
+instance Queue AQueue where
+  qempty = empty
+  qsnoc = snoc
+  quncons = uncons
 
 empty :: AQueue a
 empty = AQueue (toRef Nil) 0 [] 0

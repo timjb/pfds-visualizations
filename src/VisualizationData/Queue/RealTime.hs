@@ -1,6 +1,8 @@
 {-# LANGUAGE LambdaCase #-}
 
 module VisualizationData.Queue.RealTime where
+  
+import VisualizationData.Queue.Interface
 
 import Data.IORef
 import System.IO.Unsafe (unsafePerformIO)
@@ -64,6 +66,11 @@ data RTQueue a =
   , rearLen :: !Int
   , schedule :: !(LazyListRef a)
   }
+
+instance Queue RTQueue where
+  qempty = empty
+  qsnoc = snoc
+  quncons = uncons
 
 empty :: RTQueue a
 empty = let front = toRef Nil in RTQueue front 0 [] 0 front
