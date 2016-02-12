@@ -5,12 +5,10 @@ module Visualization.Queue.Amortized (aQueueVis) where
 import Visualization.Common
 import qualified VisualizationData.Queue.Amortized as AQ
 import Visualization.Queue.Generic
+import VisualizationData.Thunk
 
 import React.Flux
 import Data.Monoid ((<>))
--- TODO: Move somewhere else
-import Data.IORef (readIORef)
-import System.IO.Unsafe (unsafePerformIO)
 
 aQueueVis :: ReactView ()
 aQueueVis = defineQueueVis "amoqueue-visualization" renderAQueue
@@ -29,9 +27,8 @@ renderAQueue (AQ.AQueue front frontL rear rearL) = do
 renderLazyList :: Show a => AQ.LazyListRef a -> ReactElementM handler ()
 renderLazyList = go True
   where
-    unsafeRead = unsafePerformIO . readIORef
-    go isToplevel ref =
-      case unsafeRead ref of
+    go isToplevel thunk =
+      case readThunk thunk of
         Left (AQ.AppendThenReverseThunk xs ys) ->
           cldiv_ "list thunk" $ do
             cldiv_ "list" $ go True xs

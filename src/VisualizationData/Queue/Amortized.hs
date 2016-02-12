@@ -3,9 +3,8 @@
 module VisualizationData.Queue.Amortized where
 
 import VisualizationData.Queue.Interface
+import VisualizationData.Thunk
 
-import Data.IORef
-import System.IO.Unsafe (unsafePerformIO)
 import Control.Monad ((>=>))
 
 data LazyListThunk a =
@@ -15,36 +14,35 @@ data LazyList a
   = Nil
   | Cons a (LazyListRef a)
 
-type LazyListRef a = IORef (Either (LazyListThunk a) (LazyList a))
+type LazyListRef a = Thunk (LazyListThunk a) (LazyList a)
 
-createIORef :: a -> IORef a
-createIORef x = unsafePerformIO (newIORef x)
+--createIORef :: a -> IORef a
+--createIORef x = unsafePerformIO (newIORef x)
 
-toRef :: LazyList a -> LazyListRef a
-toRef = createIORef . Right
+--toRef :: LazyList a -> LazyListRef a
+--toRef = createIORef . Right
 
 lazyListFromList :: [a] -> LazyListRef a
-lazyListFromList [] = toRef Nil
+lazyListFromList [] = wrapThunk Nil
 lazyListFromList (x:xs) =
-  toRef (Cons x (lazyListFromList xs))
+  wrapThunk (Cons x (lazyListFromList xs))
 
 toWHNF :: LazyListThunk a -> LazyList a
 toWHNF (AppendThenReverseThunk xs ys) =
   case forceWHNF xs of
     Nil -> forceWHNF (lazyListFromList (reverse ys))
     Cons x xs' ->
-      Cons x $ createIORef $ Left $
-      AppendThenReverseThunk xs' ys
+      Cons x $ createThunk $ AppendThenReverseThunk xs' ys
 
 forceWHNF :: LazyListRef a -> LazyList a
-forceWHNF ref =
-  unsafePerformIO $ do
+forceWHNF = forceThunk toWHNF
+  {-unsafePerformIO $ do
     readIORef ref >>= \case
       Left thunk -> do
         let whnf = toWHNF thunk
         writeIORef ref (Right whnf)
         return whnf
-      Right lazyList -> return lazyList
+      Right lazyList -> return lazyList-}
 
 evalStep :: LazyListRef a -> Maybe (LazyListRef a)
 evalStep ref =
@@ -75,7 +73,7 @@ instance Queue AQueue where
   quncons = uncons
 
 empty :: AQueue a
-empty = AQueue (toRef Nil) 0 [] 0
+empty = AQueue (wrapThunk Nil) 0 [] 0
 
 null :: AQueue a -> Bool
 null (AQueue _ k _ _) = k == 0
@@ -87,7 +85,7 @@ mkAQueue :: LazyListRef a -> Int -> [a] -> Int -> AQueue a
 mkAQueue front frontL rear rearL
   | frontL > rearL = AQueue front frontL rear rearL
   | otherwise =
-    AQueue (createIORef (Left (AppendThenReverseThunk front rear))) (frontL + rearL) [] 0
+    AQueue (createThunk (AppendThenReverseThunk front rear)) (frontL + rearL) [] 0
 
 fromList :: [a] -> AQueue a
 fromList xs = AQueue (lazyListFromList xs) (length xs) [] 0

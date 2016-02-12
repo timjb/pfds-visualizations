@@ -1,12 +1,9 @@
 {-# LANGUAGE LambdaCase #-}
 
 module VisualizationData.Queue.RealTime where
-  
-import VisualizationData.Queue.Interface
 
-import Data.IORef
-import System.IO.Unsafe (unsafePerformIO)
-import Control.Monad ((>=>))
+import VisualizationData.Queue.Interface
+import VisualizationData.Thunk
 
 data LazyListThunk a =
   AppendReverseThunk !(LazyListRef a) !(LazyList a) ![a]
@@ -15,36 +12,22 @@ data LazyList a
   = Nil
   | Cons !a !(LazyListRef a)
 
-type LazyListRef a = IORef (Either (LazyListThunk a) (LazyList a))
-
-createIORef :: a -> IORef a
-createIORef x = unsafePerformIO (newIORef x)
-
-toRef :: LazyList a -> LazyListRef a
-toRef = createIORef . Right
+type LazyListRef a = Thunk (LazyListThunk a) (LazyList a)
 
 lazyListFromList :: [a] -> LazyListRef a
-lazyListFromList [] = toRef Nil
+lazyListFromList [] = wrapThunk Nil
 lazyListFromList (x:xs) =
-  toRef (Cons x (lazyListFromList xs))
+  wrapThunk (Cons x (lazyListFromList xs))
 
 toWHNF :: LazyListThunk a -> LazyList a
 toWHNF (AppendReverseThunk xs rs ys) =
   case (forceWHNF xs, ys) of
     (Nil, []) -> rs
     (Cons x xs', y:ys') ->
-      Cons x $ createIORef $ Left $
-      AppendReverseThunk xs' (Cons y (toRef rs)) ys'
+      Cons x $ createThunk $ AppendReverseThunk xs' (Cons y (wrapThunk rs)) ys'
 
 forceWHNF :: LazyListRef a -> LazyList a
-forceWHNF ref =
-  unsafePerformIO $ do
-    readIORef ref >>= \case
-      Left thunk -> do
-        let whnf = toWHNF thunk
-        writeIORef ref (Right whnf)
-        return whnf
-      Right lazyList -> return lazyList
+forceWHNF = forceThunk toWHNF
 
 evalStep :: LazyListRef a -> Maybe (LazyListRef a)
 evalStep ref =
@@ -73,7 +56,7 @@ instance Queue RTQueue where
   quncons = uncons
 
 empty :: RTQueue a
-empty = let front = toRef Nil in RTQueue front 0 [] 0 front
+empty = let front = wrapThunk Nil in RTQueue front 0 [] 0 front
 
 null :: RTQueue a -> Bool
 null (RTQueue _ k _ _ _) = k == 0
@@ -92,7 +75,7 @@ mkRTQueue :: LazyListRef a -> Int -> [a] -> Int -> LazyListRef a -> RTQueue a
 mkRTQueue front frontL rear rearL sched
   | frontL > rearL = RTQueue front frontL rear rearL sched
   | otherwise =
-    let newFront = createIORef (Left (AppendReverseThunk front Nil rear))
+    let newFront = createThunk (AppendReverseThunk front Nil rear)
     in RTQueue newFront (frontL + rearL) [] 0 newFront
 
 fromList :: [a] -> RTQueue a

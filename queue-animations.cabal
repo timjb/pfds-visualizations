@@ -20,6 +20,7 @@ library
                        VisualizationData.Queue.Bankers,
                        VisualizationData.Queue.Amortized,
                        VisualizationData.Queue.RealTime,
+                       VisualizationData.Thunk,
                        Visualization.Queue.Generic,
                        Visualization.Queue.Bankers,
                        Visualization.Queue.Amortized,

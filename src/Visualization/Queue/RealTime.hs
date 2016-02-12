@@ -5,6 +5,7 @@ module Visualization.Queue.RealTime (rtQueueVis) where
 import Visualization.Common
 import qualified VisualizationData.Queue.RealTime as RTQ
 import qualified Visualization.Queue.Generic as VQG
+import VisualizationData.Thunk
 
 import React.Flux
 import Data.Maybe (fromMaybe)
@@ -12,8 +13,6 @@ import Control.DeepSeq (NFData)
 import GHC.Generics (Generic)
 import Data.Typeable (Typeable)
 import Data.Monoid ((<>))
-import Data.IORef (readIORef)
-import System.IO.Unsafe (unsafePerformIO)
 import Control.Monad (forM_, void)
 import Control.Concurrent (threadDelay, forkIO)
 
@@ -67,16 +66,15 @@ rtQueueVis =
 renderLazyList :: Show a => RTQ.LazyListRef a -> ReactElementM handler ()
 renderLazyList = go True
   where
-    unsafeRead = unsafePerformIO . readIORef
-    go isToplevel ref =
-      case unsafeRead ref of
+    go isToplevel thunk =
+      case readThunk thunk of
         Left (RTQ.AppendReverseThunk xs rs ys) ->
           cldiv_ "list thunk" $ do
             cldiv_ "list" $ go True xs
             code_ " ++ reverse "
             renderList ys
             code_ " ++ "
-            go True (RTQ.toRef rs)
+            go True (wrapThunk rs)
         Right RTQ.Nil ->
           if isToplevel then cldiv_ "list empty" mempty else mempty
         Right (RTQ.Cons x xs) ->

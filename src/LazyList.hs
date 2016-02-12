@@ -1,3 +1,0 @@
-module LazyList where
-
-import 
