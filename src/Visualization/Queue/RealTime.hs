@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, DeriveGeneric, DeriveAnyClass, PatternSynonyms #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies, DeriveGeneric, DeriveAnyClass, PatternSynonyms, ViewPatterns #-}
 
 module Visualization.Queue.RealTime (rtQueueVis) where
 
@@ -19,7 +19,8 @@ import Control.Concurrent (threadDelay, forkIO)
 newtype RTQueueVisState = RTQueueVisState (VQG.QueueVisState RTQ.RTQueue)
   deriving (Typeable)
 
-pattern RTQVS nextInt queue hist = RTQueueVisState (VQG.QueueVisState nextInt queue hist)
+pattern RTQVS nextInt queue hist =
+  RTQueueVisState (VQG.QueueVisState nextInt queue hist)
 
 initialState :: RTQueueVisState
 initialState = RTQueueVisState VQG.initialState
@@ -37,16 +38,17 @@ forceStepFuture =
 
 instance StoreData RTQueueVisState where
   type StoreAction RTQueueVisState = RTQueueAction
-  transform (SimpleQueueAction VQG.Tail) (RTQVS k q hist) = do
+  transform (SimpleQueueAction VQG.Tail) (RTQVS k (RTQ.schedStep -> q) hist) = do
     forceStepFuture
-    pure $ RTQVS k (fromMaybe q (RTQ.tail q)) (q:hist)
-  transform (SimpleQueueAction VQG.Snoc) (RTQVS k q hist) = do
+    pure $ RTQVS k (fromMaybe q (RTQ.tail' q)) (q:hist)
+  transform (SimpleQueueAction VQG.Snoc) (RTQVS k (RTQ.schedStep -> q) hist) = do
     forceStepFuture
-    pure $ RTQVS (k+1) (RTQ.snoc q k) (q:hist)
+    pure $ RTQVS (k+1) (RTQ.snoc' q k) (q:hist)
+  -- remaining two SimpleQueueAction's: back and clear
   transform (SimpleQueueAction action) (RTQueueVisState state) =
     RTQueueVisState <$> transform action state
-  transform ScheduleStep (RTQVS k q hist) =
-    return $ RTQVS k (RTQ.schedStep q) hist
+  transform ScheduleStep (RTQVS k q hist)
+    = pure (RTQVS k (RTQ.schedStep q) hist)
 
 queueStore :: ReactStore RTQueueVisState
 queueStore = mkStore initialState
@@ -63,32 +65,37 @@ rtQueueVis =
         div_ $ renderRTQueue rtq
         forM_ hist $ div_ . renderRTQueue
 
-renderLazyList :: Show a => RTQ.LazyListRef a -> ReactElementM handler ()
+renderLazyList :: Show a => RTQ.LazyListRef a -> Int -> ReactElementM handler ()
 renderLazyList = go True
   where
-    go isToplevel thunk =
+    schedWrapper schedHtml =
+      cldiv_ "list schedule" $ do
+        clspan_ "len-list-name" "schedule"
+        schedHtml
+    go isToplevel thunk ix =
+      (if ix == 0 || (isToplevel && ix == -1) then schedWrapper else id) $
       case readThunk thunk of
         Left (RTQ.AppendReverseThunk xs rs ys) ->
           cldiv_ "list thunk" $ do
-            cldiv_ "list" $ go True xs
+            cldiv_ "list" $ go True xs (-10)
             code_ " ++ reverse "
             renderList ys
             code_ " ++ "
-            go True (wrapThunk rs)
+            go True (wrapThunk rs) (-10)
         Right RTQ.Nil ->
           if isToplevel then cldiv_ "list empty" mempty else mempty
         Right (RTQ.Cons x xs) ->
           (if isToplevel then cldiv_ "list" else id) $ do
             clspan_ "list-cell" $ clspan_ "item" (elemShow x)
-            go False xs
+            go False xs (ix-1)
 
 renderRTQueue :: Show a => RTQ.RTQueue a -> ReactElementM handler ()
-renderRTQueue (RTQ.RTQueue front frontL rear rearL _) = do
-  div_ [ "className" $= "front" ] $ do
-    span_ [ "className" $= "len-list-name" ] "front"
-    div_ [ "className" $= "len-list" ] $ do
-      span_ [ "className" $= "len-list-length" ] $ "(length: " <> elemShow frontL <> ")"
-      renderLazyList front
-  div_ [ "className" $= "rear" ] $ do
-    span_ [ "className" $= "len-list-name" ] "rear"
+renderRTQueue queue@(RTQ.RTQueue front frontL rear rearL _ _) = do
+  cldiv_ "front" $ do
+    clspan_ "len-list-name" "front"
+    cldiv_ "len-list" $ do
+      clspan_ "len-list-length" $ "(length: " <> elemShow frontL <> ")"
+      renderLazyList front (RTQ.scheduleIndex queue)
+  cldiv_ "rear" $ do
+    clspan_ "len-list-name" "rear"
     renderListWithLen rear rearL

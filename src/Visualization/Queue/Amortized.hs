@@ -15,13 +15,13 @@ aQueueVis = defineQueueVis "amoqueue-visualization" renderAQueue
 
 renderAQueue :: Show a => AQ.AQueue a -> ReactElementM handler ()
 renderAQueue (AQ.AQueue front frontL rear rearL) = do
-  div_ [ "className" $= "front" ] $ do
-    span_ [ "className" $= "len-list-name" ] "front"
-    div_ [ "className" $= "len-list" ] $ do
-      span_ [ "className" $= "len-list-length" ] $ "(length: " <> elemShow frontL <> ")"
+  cldiv_ "front" $ do
+    clspan_ "len-list-name" "front"
+    cldiv_ "len-list" $ do
+      clspan_ "len-list-length" $ "(length: " <> elemShow frontL <> ")"
       renderLazyList front
-  div_ [ "className" $= "rear" ] $ do
-    span_ [ "className" $= "len-list-name" ] "rear"
+  cldiv_ "rear" $ do
+    clspan_ "len-list-name" "rear"
     renderListWithLen rear rearL
 
 renderLazyList :: Show a => AQ.LazyListRef a -> ReactElementM handler ()

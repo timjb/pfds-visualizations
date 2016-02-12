@@ -16,11 +16,11 @@ bQueueVis =
 
 renderBQueue :: BQ.BQueue Int -> ReactElementM handler ()
 renderBQueue (BQ.BQueue xs ys) = do
-  div_ [ "className" $= "front" ] $ do
-    span_ [ "className" $= "len-list-name" ] "front"
+  cldiv_ "front" $ do
+    clspan_ "len-list-name" "front"
     renderLenList xs
-  div_ [ "className" $= "rear" ] $ do
-    span_ [ "className" $= "len-list-name" ] "rear"
+  cldiv_ "rear" $ do
+    clspan_ "len-list-name" "rear"
     renderLenList ys
 
 renderLenList :: LL.LenList Int -> ReactElementM handler ()

@@ -106,6 +106,12 @@ section { margin: 500px 0; }
   background: rgba(100, 100, 100, 0.15)
 }
 
+.schedule {
+  background: #FBCEB1;
+  padding: 25px 5px 5px;
+  position: relative;
+}
+
 .list code {
   display: inline-block;
   vertical-align: 10%;

@@ -16,12 +16,6 @@ data LazyList a
 
 type LazyListRef a = Thunk (LazyListThunk a) (LazyList a)
 
---createIORef :: a -> IORef a
---createIORef x = unsafePerformIO (newIORef x)
-
---toRef :: LazyList a -> LazyListRef a
---toRef = createIORef . Right
-
 lazyListFromList :: [a] -> LazyListRef a
 lazyListFromList [] = wrapThunk Nil
 lazyListFromList (x:xs) =
@@ -36,13 +30,6 @@ toWHNF (AppendThenReverseThunk xs ys) =
 
 forceWHNF :: LazyListRef a -> LazyList a
 forceWHNF = forceThunk toWHNF
-  {-unsafePerformIO $ do
-    readIORef ref >>= \case
-      Left thunk -> do
-        let whnf = toWHNF thunk
-        writeIORef ref (Right whnf)
-        return whnf
-      Right lazyList -> return lazyList-}
 
 evalStep :: LazyListRef a -> Maybe (LazyListRef a)
 evalStep ref =
@@ -71,6 +58,8 @@ instance Queue AQueue where
   qempty = empty
   qsnoc = snoc
   quncons = uncons
+  -- it is important to implement this manually, because the default implementation via quncons has the side-effect of evaluating thunks
+  qnull q = frontLen q == 0
 
 empty :: AQueue a
 empty = AQueue (wrapThunk Nil) 0 [] 0
