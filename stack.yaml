@@ -1,5 +1,12 @@
 resolver: lts-4.2
-compiler: ghcjs-0.2.0_ghc-7.10.3
+compiler: ghcjs-0.2.0.20160620_ghc-7.10.3
+compiler-check: match-exact
+setup-info:
+  ghcjs:
+    source:
+      ghcjs-0.2.0.20160620_ghc-7.10.3:
+        url: https://s3.amazonaws.com/ghcjs/ghcjs-0.2.0.20160620_ghc-7.10.3.tar.gz
+        sha1: ab1a147895be668f8e37d386705ca8d5a8d3a026
 packages:
 - '.'
 extra-deps:
