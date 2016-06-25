@@ -1,11 +1,14 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, DeriveGeneric, DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Visualization.Queue.Bankers (bQueueVis) where
 
-import qualified VisualizationData.Queue.Bankers as BQ
-import qualified VisualizationData.LenList as LL
 import Visualization.Common
 import Visualization.Queue.Generic
+import qualified VisualizationData.LenList as LL
+import qualified VisualizationData.Queue.Bankers as BQ
 
 import React.Flux
 

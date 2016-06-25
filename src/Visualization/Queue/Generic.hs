@@ -1,6 +1,11 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, FlexibleContexts, UndecidableInstances #-}
-{-# LANGUAGE StandaloneDeriving, DeriveGeneric, DeriveAnyClass #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Visualization.Queue.Generic
   ( QueueVisState (..)
@@ -12,14 +17,14 @@ module Visualization.Queue.Generic
 
 import VisualizationData.Queue.Interface
 
-import React.Flux
+import Control.Monad (forM_)
 import Control.DeepSeq (NFData)
-import GHC.Generics (Generic)
 import Data.JSString (JSString)
-import Data.Typeable (Typeable)
 import Data.Maybe (fromMaybe)
 import Data.Monoid ((<>))
-import Control.Monad (forM_)
+import Data.Typeable (Typeable)
+import GHC.Generics (Generic)
+import React.Flux
 
 data QueueVisState q =
   QueueVisState
@@ -31,7 +36,8 @@ data QueueVisState q =
 deriving instance Show (q Int) => Show (QueueVisState q)
 
 initialState :: Queue q => QueueVisState q
-initialState = QueueVisState 2 (qsnoc qempty 1) []
+initialState =
+  QueueVisState 2 (qsnoc qempty 1) []
 
 data QueueAction
   = Tail
@@ -59,14 +65,31 @@ renderControls
   -> ReactElementM ViewEventHandler ()
 renderControls (QueueVisState k bq hist) dispatch =
   p_ [ "className" $= "controls" ] $ do
-    button_ [ "className" $= "pure-button back-button", "disabled" @= null hist, onClick (\_ _ -> dispatch Back) ] "back"
+    button_
+      [ "className" $= "pure-button back-button"
+      , "disabled" @= null hist
+      , onClick (\_ _ -> dispatch Back)
+      ]
+      "back"
     " "
-    button_ [ "className" $= "pure-button clear-button", onClick (\_ _ -> dispatch Clear) ] "clear"
+    button_
+      [ "className" $= "pure-button clear-button"
+      , onClick (\_ _ -> dispatch Clear)
+      ]
+      "clear"
     " "
-    button_ [ "className" $= "pure-button tail-button", "disabled" @= qnull bq, onClick (\_ _ -> dispatch Tail) ] "tail(queue)"
+    button_
+      [ "className" $= "pure-button tail-button"
+      , "disabled" @= qnull bq
+      , onClick (\_ _ -> dispatch Tail)
+      ]
+      "tail(queue)"
     " "
-    button_ [ "className" $= "pure-button snoc-button", onClick (\_ _ -> dispatch Snoc) ] $
-      "snoc(queue, " <> elemShow k <> ")"
+    button_
+      [ "className" $= "pure-button snoc-button"
+      , onClick (\_ _ -> dispatch Snoc)
+      ]
+      ("snoc(queue, " <> elemShow k <> ")")
 
 defineQueueVis
   :: (Queue q, Typeable q)
@@ -81,6 +104,8 @@ defineQueueVis name (renderQueue :: q Int -> ReactElementM ViewEventHandler ()) 
       forM_ hist $ div_ . renderQueue
   where
     queueStore :: ReactStore (QueueVisState q)
-    queueStore = mkStore initialState
+    queueStore =
+      mkStore initialState
     dispatch :: QueueAction -> [SomeStoreAction]
-    dispatch a = [SomeStoreAction queueStore a]
+    dispatch a =
+      [SomeStoreAction queueStore a]

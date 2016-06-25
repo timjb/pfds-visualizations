@@ -1,29 +1,37 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, DeriveGeneric, DeriveAnyClass, PatternSynonyms, ViewPatterns #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Visualization.Queue.RealTime (rtQueueVis) where
 
 import Visualization.Common
-import qualified VisualizationData.Queue.RealTime as RTQ
-import qualified Visualization.Queue.Generic as VQG
 import VisualizationData.Thunk
+import qualified Visualization.Queue.Generic as VQG
+import qualified VisualizationData.Queue.RealTime as RTQ
 
-import React.Flux
-import Data.Maybe (fromMaybe)
-import Control.DeepSeq (NFData)
-import GHC.Generics (Generic)
-import Data.Typeable (Typeable)
-import Data.Monoid ((<>))
-import Control.Monad (forM_, void)
 import Control.Concurrent (threadDelay, forkIO)
+import Control.DeepSeq (NFData)
+import Control.Monad (forM_, void)
+import Data.Maybe (fromMaybe)
+import Data.Monoid ((<>))
+import Data.Typeable (Typeable)
+import GHC.Generics (Generic)
+import React.Flux
 
-newtype RTQueueVisState = RTQueueVisState (VQG.QueueVisState RTQ.RTQueue)
-  deriving (Typeable)
+newtype RTQueueVisState
+  = RTQueueVisState
+  { _unRTQueueVisState :: VQG.QueueVisState RTQ.RTQueue
+  } deriving (Typeable)
 
 pattern RTQVS nextInt queue hist =
   RTQueueVisState (VQG.QueueVisState nextInt queue hist)
 
 initialState :: RTQueueVisState
-initialState = RTQueueVisState VQG.initialState
+initialState =
+  RTQueueVisState VQG.initialState
 
 data RTQueueAction
   = SimpleQueueAction VQG.QueueAction
@@ -47,14 +55,16 @@ instance StoreData RTQueueVisState where
   -- remaining two SimpleQueueAction's: back and clear
   transform (SimpleQueueAction action) (RTQueueVisState state) =
     RTQueueVisState <$> transform action state
-  transform ScheduleStep (RTQVS k q hist)
-    = pure (RTQVS k (RTQ.schedStep q) hist)
+  transform ScheduleStep (RTQVS k q hist) =
+    pure (RTQVS k (RTQ.schedStep q) hist)
 
 queueStore :: ReactStore RTQueueVisState
-queueStore = mkStore initialState
+queueStore =
+  mkStore initialState
 
 dispatch :: RTQueueAction -> [SomeStoreAction]
-dispatch a = [SomeStoreAction queueStore a]
+dispatch a =
+  [SomeStoreAction queueStore a]
 
 rtQueueVis :: ReactView ()
 rtQueueVis =
@@ -66,7 +76,8 @@ rtQueueVis =
         forM_ hist $ div_ . renderRTQueue
 
 renderLazyList :: Show a => RTQ.LazyListRef a -> Int -> ReactElementM handler ()
-renderLazyList = go True
+renderLazyList =
+  go True
   where
     schedWrapper schedHtml =
       cldiv_ "list schedule" $ do
@@ -94,7 +105,8 @@ renderRTQueue queue@(RTQ.RTQueue front frontL rear rearL _ _) = do
   cldiv_ "front" $ do
     clspan_ "len-list-name" "front"
     cldiv_ "len-list" $ do
-      clspan_ "len-list-length" $ "(length: " <> elemShow frontL <> ")"
+      clspan_ "len-list-length" $
+        "(length: " <> elemShow frontL <> ")"
       renderLazyList front (RTQ.scheduleIndex queue)
   cldiv_ "rear" $ do
     clspan_ "len-list-name" "rear"

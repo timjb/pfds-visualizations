@@ -12,19 +12,26 @@ module VisualizationData.Thunk
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import System.IO.Unsafe (unsafePerformIO)
 
-newtype Thunk t a = Thunk { getThunk :: IORef (Either t a) }
+newtype Thunk t a
+  = Thunk
+  { getThunk :: IORef (Either t a)
+  }
 
 mkThunk :: Either t a -> Thunk t a
-mkThunk = unsafePerformIO . fmap Thunk . newIORef
+mkThunk =
+  unsafePerformIO . fmap Thunk . newIORef
 
 createThunk :: t -> Thunk t a
-createThunk = mkThunk . Left
+createThunk =
+  mkThunk . Left
 
 wrapThunk :: a -> Thunk t a
-wrapThunk = mkThunk . Right
+wrapThunk =
+  mkThunk . Right
 
 readThunk :: Thunk t a -> Either t a
-readThunk = unsafePerformIO . readIORef . getThunk
+readThunk =
+  unsafePerformIO . readIORef . getThunk
 
 forceThunk :: (t -> a) -> Thunk t a -> a
 forceThunk step (Thunk ref) =

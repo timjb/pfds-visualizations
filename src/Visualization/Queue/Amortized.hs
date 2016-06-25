@@ -1,14 +1,17 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, DeriveGeneric, DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Visualization.Queue.Amortized (aQueueVis) where
 
 import Visualization.Common
-import qualified VisualizationData.Queue.Amortized as AQ
 import Visualization.Queue.Generic
 import VisualizationData.Thunk
+import qualified VisualizationData.Queue.Amortized as AQ
 
-import React.Flux
 import Data.Monoid ((<>))
+import React.Flux
 
 aQueueVis :: ReactView ()
 aQueueVis = defineQueueVis "amoqueue-visualization" renderAQueue
@@ -18,14 +21,16 @@ renderAQueue (AQ.AQueue front frontL rear rearL) = do
   cldiv_ "front" $ do
     clspan_ "len-list-name" "front"
     cldiv_ "len-list" $ do
-      clspan_ "len-list-length" $ "(length: " <> elemShow frontL <> ")"
+      clspan_ "len-list-length" $
+        "(length: " <> elemShow frontL <> ")"
       renderLazyList front
   cldiv_ "rear" $ do
     clspan_ "len-list-name" "rear"
     renderListWithLen rear rearL
 
 renderLazyList :: Show a => AQ.LazyListRef a -> ReactElementM handler ()
-renderLazyList = go True
+renderLazyList =
+  go True
   where
     go isToplevel thunk =
       case readThunk thunk of
@@ -35,7 +40,10 @@ renderLazyList = go True
             code_ " ++ reverse "
             renderList ys
         Right AQ.Nil ->
-          if isToplevel then cldiv_ "list empty" mempty else mempty
+          if isToplevel then
+            cldiv_ "list empty" mempty
+          else
+            mempty
         Right (AQ.Cons x xs) ->
           (if isToplevel then cldiv_ "list" else id) $ do
             clspan_ "list-cell" $ clspan_ "item" (elemShow x)
