@@ -15,6 +15,7 @@ import VisualizationData.Queue.Interface
 import React.Flux
 import Control.DeepSeq (NFData)
 import GHC.Generics (Generic)
+import Data.JSString (JSString)
 import Data.Typeable (Typeable)
 import Data.Maybe (fromMaybe)
 import Data.Monoid ((<>))
@@ -69,7 +70,7 @@ renderControls (QueueVisState k bq hist) dispatch =
 
 defineQueueVis
   :: (Queue q, Typeable q)
-  => String
+  => JSString
   -> (q Int -> ReactElementM ViewEventHandler ())
   -> ReactView ()
 defineQueueVis name (renderQueue :: q Int -> ReactElementM ViewEventHandler ()) =

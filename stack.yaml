@@ -1,4 +1,4 @@
-resolver: lts-4.2
+resolver: lts-6.4
 compiler: ghcjs-0.2.0.20160620_ghc-7.10.3
 compiler-check: match-exact
 setup-info:
@@ -10,6 +10,6 @@ setup-info:
 packages:
 - '.'
 extra-deps:
-- react-flux-1.0.3
+- react-flux-1.1.1
 flags: {}
 extra-package-dbs: []
