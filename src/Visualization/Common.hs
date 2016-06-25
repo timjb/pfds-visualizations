@@ -2,9 +2,10 @@
 
 module Visualization.Common where
 
-import React.Flux
-import Control.Monad (forM_)
+import Control.Monad (zipWithM_)
+import Data.JSString (JSString)
 import Data.Monoid ((<>))
+import React.Flux
 
 renderList :: Show a => [a] -> ReactElementM handler ()
 renderList xs =
@@ -12,9 +13,11 @@ renderList xs =
     cldiv_ "list empty" " "
   else
     cldiv_ "list" $
-      forM_ xs $ \x ->
-        clspan_ "list-cell" $
+      forZipWithM_ xs ([0..] :: [Int]) $ \x i ->
+        span_ [ "key" &= i, "className" $= "list-cell" ] $
           clspan_ "item" (elemShow x)
+  where
+    forZipWithM_ as bs f = zipWithM_ f as bs
 
 renderListWithLen :: Show a => [a] -> Int -> ReactElementM handler ()
 renderListWithLen xs len =
@@ -23,6 +26,6 @@ renderListWithLen xs len =
       "(length: " <> elemShow len <> ")"
     renderList xs
 
-clspan_ :: String -> ReactElementM handler a -> ReactElementM handler a
+clspan_ :: JSString -> ReactElementM handler a -> ReactElementM handler a
 clspan_ cl =
-  span_ [ "className" @= cl ]
+  span_ [ "className" $= cl ]

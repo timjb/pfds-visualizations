@@ -21,6 +21,7 @@ library
                        VisualizationData.Queue.Amortized,
                        VisualizationData.Queue.RealTime,
                        VisualizationData.Thunk,
+                       Visualization.Common,
                        Visualization.Queue.Generic,
                        Visualization.Queue.Bankers,
                        Visualization.Queue.Amortized,
