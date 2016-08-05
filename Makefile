@@ -6,6 +6,7 @@ all: js-build/install-root js-build/app.min.js
 
 js-build/install-root: $(INSTALL_ROOT)
 	mkdir -p js-build
+	rm -f js-build/install-root
 	ln -s $(INSTALL_ROOT) js-build/install-root
 
 js-build/queue-animations.min.js: js-build/queue-animations.js
